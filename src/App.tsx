@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
+import RepositoryCard from './components/RepositoryCard'
+import { formatCount } from './utils/formatCount'
 import './App.css'
 
 type Repository = {
@@ -17,6 +19,16 @@ type SearchResult = { total_count: number; incomplete_results: boolean; items: R
 type Search = { query: string; language: string; sort: string; page: number }
 const pageSize = 12
 const number = new Intl.NumberFormat('ko-KR')
+
+// 화면 미리보기용 샘플이며 실제 GitHub 통계가 아닙니다.
+const sampleRepository = {
+  name: 'facebook/react',
+  description: '사용자 인터페이스를 만들기 위한 라이브러리입니다. (샘플 데이터)',
+  stars: 230000,
+  forks: 47000,
+  language: 'JavaScript',
+  url: 'https://github.com/facebook/react',
+}
 
 function App() {
   const [query, setQuery] = useState('')
@@ -98,8 +110,8 @@ function App() {
           <div className="section-heading"><h2 id="results-title">{search ? '검색 결과' : '가능성을 발견하는 공간'}</h2><span>{result ? `${number.format(result.total_count)}개 저장소 · ${search?.page}페이지` : 'REPOSITORIES'}</span></div>
           <div role="status" aria-live="polite">{loading && <div className="empty-state"><span className="spinner" /><h3>저장소를 찾고 있어요</h3><p>GitHub에서 검색 결과를 가져오는 중입니다.</p></div>}</div>
           {error && <div className="empty-state error-state" role="alert"><h3>검색을 완료하지 못했어요</h3><p>{error}</p><button className="secondary-button" onClick={() => setSearch(search ? { ...search } : null)}>다시 시도</button></div>}
-          {!loading && !error && !search && <div className="empty-state"><div className="empty-icon" aria-hidden="true">⌕</div><h3>어떤 프로젝트가 궁금한가요?</h3><p>키워드를 검색하거나 추천 키워드를 선택해 보세요.<br />설명, 사용 언어, 스타 수를 한눈에 비교할 수 있어요.</p><span className="empty-caption">좋은 코드를 만나는 새로운 방법</span></div>}
-          {!loading && !error && result && <>{result.incomplete_results && <p className="notice">일부 결과만 조회되었습니다. 더 구체적인 키워드로 검색해 보세요.</p>}{result.items.length === 0 ? <div className="empty-state"><h3>일치하는 저장소가 없어요</h3><p>다른 키워드나 언어 조건으로 검색해 보세요.</p></div> : <div className="repository-grid">{result.items.map(repo => <article className="repository-card" key={repo.id}><div className="card-top"><span className="repo-icon" aria-hidden="true">▤</span><span className="public-badge">Public</span></div><h3><a href={repo.html_url} target="_blank" rel="noreferrer">{repo.full_name}<span aria-hidden="true"> ↗</span></a></h3><p className="description">{repo.description || '등록된 설명이 없습니다.'}</p><div className="topics">{repo.topics?.slice(0, 3).map(topic => <span key={topic}>{topic}</span>)}</div><div className="repo-stats"><span><i className="language-dot" />{repo.language || '언어 미지정'}</span><span aria-label={`스타 ${repo.stargazers_count}개`}>☆ {number.format(repo.stargazers_count)}</span><span aria-label={`포크 ${repo.forks_count}개`}>⑂ {number.format(repo.forks_count)}</span></div><div className="updated">업데이트 {new Date(repo.updated_at).toLocaleDateString('ko-KR')}</div></article>)}</div>}{pages > 1 && search && <nav className="pagination" aria-label="검색 결과 페이지"><button disabled={search.page === 1} onClick={() => setSearch({ ...search, page: search.page - 1 })}>← 이전</button><span>{search.page} / {pages}</span><button disabled={search.page >= pages} onClick={() => setSearch({ ...search, page: search.page + 1 })}>다음 →</button></nav>}</>}
+          {!loading && !error && !search && <div className="repository-grid"><RepositoryCard {...sampleRepository} /></div>}
+          {!loading && !error && result && <>{result.incomplete_results && <p className="notice">일부 결과만 조회되었습니다. 더 구체적인 키워드로 검색해 보세요.</p>}{result.items.length === 0 ? <div className="empty-state"><h3>일치하는 저장소가 없어요</h3><p>다른 키워드나 언어 조건으로 검색해 보세요.</p></div> : <div className="repository-grid">{result.items.map(repo => <article className="repository-card" key={repo.id}><div className="card-top"><span className="repo-icon" aria-hidden="true">▤</span><span className="public-badge">Public</span></div><h3><a href={repo.html_url} target="_blank" rel="noreferrer">{repo.full_name}<span aria-hidden="true"> ↗</span></a></h3><p className="description">{repo.description || '등록된 설명이 없습니다.'}</p><div className="topics">{repo.topics?.slice(0, 3).map(topic => <span key={topic}>{topic}</span>)}</div><div className="repo-stats"><span><i className="language-dot" />{repo.language || '언어 미지정'}</span><span aria-label={`스타 ${repo.stargazers_count}개`}>☆ {formatCount(repo.stargazers_count)}</span><span aria-label={`포크 ${repo.forks_count}개`}>⑂ {formatCount(repo.forks_count)}</span></div><div className="updated">업데이트 {new Date(repo.updated_at).toLocaleDateString('ko-KR')}</div></article>)}</div>}{pages > 1 && search && <nav className="pagination" aria-label="검색 결과 페이지"><button disabled={search.page === 1} onClick={() => setSearch({ ...search, page: search.page - 1 })}>← 이전</button><span>{search.page} / {pages}</span><button disabled={search.page >= pages} onClick={() => setSearch({ ...search, page: search.page + 1 })}>다음 →</button></nav>}</>}
         </section>
       </main>
       <footer><span>RepoLens<span className="brand-dot">.</span> <span className="footer-message">코드를 발견하고, 가능성을 연결하세요.</span></span><span>Powered by GitHub API</span></footer>
